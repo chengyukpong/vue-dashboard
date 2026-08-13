@@ -16,9 +16,18 @@ const state = reactive<Partial<Schema>>({
 })
 
 const toast = useToast()
+const { create } = useCustomers()
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-  toast.add({ title: 'Success', description: `New customer ${event.data.name} added`, color: 'success' })
-  open.value = false
+  try {
+    const customer = await create(event.data)
+    toast.add({ title: 'Success', description: `New customer ${customer.name} added`, color: 'success' })
+    open.value = false
+    state.name = ''
+    state.email = ''
+  } catch {
+    toast.add({ title: 'Error', description: 'The customer could not be added.', color: 'error' })
+  }
 }
 </script>
 

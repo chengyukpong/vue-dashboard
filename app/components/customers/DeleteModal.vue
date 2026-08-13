@@ -1,22 +1,36 @@
 <script setup lang="ts">
-withDefaults(defineProps<{
-  count?: number
+const props = withDefaults(defineProps<{
+  ids?: number[]
 }>(), {
-  count: 0
+  ids: () => []
 })
 
+const toast = useToast()
+const { remove } = useCustomers()
 const open = ref(false)
 
 async function onSubmit() {
-  await new Promise(resolve => setTimeout(resolve, 1000))
-  open.value = false
+  try {
+    await remove(props.ids)
+    toast.add({
+      title: 'Customers deleted',
+      description: `${props.ids.length} customer${props.ids.length > 1 ? 's' : ''} have been deleted.`
+    })
+    open.value = false
+  } catch {
+    toast.add({
+      title: 'Delete failed',
+      description: 'The customers could not be deleted.',
+      color: 'error'
+    })
+  }
 }
 </script>
 
 <template>
   <UModal
     v-model:open="open"
-    :title="`Delete ${count} customer${count > 1 ? 's' : ''}`"
+    :title="`Delete ${ids.length} customer${ids.length > 1 ? 's' : ''}`"
     :description="`Are you sure, this action cannot be undone.`"
   >
     <slot />

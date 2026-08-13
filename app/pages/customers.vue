@@ -1,18 +1,13 @@
 <script setup lang="ts">
-import type { TableColumn } from '@nuxt/ui'
+import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
 import { upperFirst } from 'scule'
 import { getPaginationRowModel } from '@tanstack/table-core'
-import type { Row } from '@tanstack/table-core'
+import type { Row, Table as TanstackTable } from '@tanstack/table-core'
 import type { User } from '~/types'
-
-const UAvatar = resolveComponent('UAvatar')
-const UButton = resolveComponent('UButton')
-const UBadge = resolveComponent('UBadge')
-const UDropdownMenu = resolveComponent('UDropdownMenu')
-const UCheckbox = resolveComponent('UCheckbox')
+import { TableRowActionDropdown, TableSelectAllCheckbox, TableSelectRowCheckbox, UAvatar, UBadge, UButton } from '#components'
 
 const toast = useToast()
-const table = useTemplateRef('table')
+const table = useTemplateRef<{ tableApi: TanstackTable<User> }>('table')
 
 const columnFilters = ref([{
   id: 'email',
@@ -21,11 +16,33 @@ const columnFilters = ref([{
 const columnVisibility = ref()
 const rowSelection = ref({ 1: true })
 
-const { data, status } = await useFetch<User[]>('/api/customers', {
-  lazy: true
-})
+const { data, status, refresh, remove } = useCustomers()
 
-function getRowItems(row: Row<User>) {
+if (data.value.length === 0 && status.value === 'idle') {
+  await refresh()
+}
+
+const selectedIds = computed<number[]>(() =>
+  table.value?.tableApi?.getSelectedRowModel().rows.map(row => row.original.id) ?? []
+)
+
+async function deleteCustomer(row: Row<User>) {
+  try {
+    await remove([row.original.id])
+    toast.add({
+      title: 'Customer deleted',
+      description: `${row.original.name} has been deleted.`
+    })
+  } catch {
+    toast.add({
+      title: 'Delete failed',
+      description: 'The customer could not be deleted.',
+      color: 'error'
+    })
+  }
+}
+
+function getRowItems(row: Row<User>): DropdownMenuItem[] {
   return [
     {
       type: 'label',
@@ -61,10 +78,7 @@ function getRowItems(row: Row<User>) {
       icon: 'i-lucide-trash',
       color: 'error',
       onSelect() {
-        toast.add({
-          title: 'Customer deleted',
-          description: 'The customer has been deleted.'
-        })
+        deleteCustomer(row)
       }
     }
   ]
@@ -73,21 +87,8 @@ function getRowItems(row: Row<User>) {
 const columns: TableColumn<User>[] = [
   {
     id: 'select',
-    header: ({ table }) =>
-      h(UCheckbox, {
-        'modelValue': table.getIsSomePageRowsSelected()
-          ? 'indeterminate'
-          : table.getIsAllPageRowsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') =>
-          table.toggleAllPageRowsSelected(!!value),
-        'ariaLabel': 'Select all'
-      }),
-    cell: ({ row }) =>
-      h(UCheckbox, {
-        'modelValue': row.getIsSelected(),
-        'onUpdate:modelValue': (value: boolean | 'indeterminate') => row.toggleSelected(!!value),
-        'ariaLabel': 'Select row'
-      })
+    header: ({ table }) => h(TableSelectAllCheckbox, { table }),
+    cell: ({ row }) => h(TableSelectRowCheckbox, { row })
   },
   {
     accessorKey: 'id',
@@ -151,28 +152,7 @@ const columns: TableColumn<User>[] = [
   },
   {
     id: 'actions',
-    cell: ({ row }) => {
-      return h(
-        'div',
-        { class: 'text-right' },
-        h(
-          UDropdownMenu,
-          {
-            content: {
-              align: 'end'
-            },
-            items: getRowItems(row)
-          },
-          () =>
-            h(UButton, {
-              icon: 'i-lucide-ellipsis-vertical',
-              color: 'neutral',
-              variant: 'ghost',
-              class: 'ml-auto'
-            })
-        )
-      )
-    }
+    cell: ({ row }) => h(TableRowActionDropdown, { items: getRowItems(row) })
   }
 ]
 
@@ -230,7 +210,7 @@ const pagination = ref({
         />
 
         <div class="flex flex-wrap items-center gap-1.5">
-          <CustomersDeleteModal :count="table?.tableApi?.getFilteredSelectedRowModel().rows.length">
+          <CustomersDeleteModal :ids="selectedIds">
             <UButton
               v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
               label="Delete"

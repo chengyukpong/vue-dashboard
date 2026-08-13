@@ -3,6 +3,8 @@ import type { AvatarProps } from '@nuxt/ui'
 export type UserStatus = 'subscribed' | 'unsubscribed' | 'bounced'
 export type SaleStatus = 'paid' | 'failed' | 'refunded'
 
+export type CreateCustomerInput = Pick<User, 'name' | 'email'>
+
 export interface User {
   id: number
   name: string
