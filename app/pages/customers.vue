@@ -280,6 +280,7 @@ const pagination = ref({
         class="shrink-0"
         :data="data"
         :columns="columns"
+        :get-row-id="(row: User) => String(row.id)"
         :loading="status === 'pending'"
         :ui="{
           base: 'table-fixed border-separate border-spacing-0',
