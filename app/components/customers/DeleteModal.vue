@@ -7,11 +7,13 @@ const props = withDefaults(defineProps<{
 
 const toast = useToast()
 const { remove } = useCustomers()
+const emit = defineEmits<{ deleted: [] }>()
 const open = ref(false)
 
 async function onSubmit() {
   try {
     await remove(props.ids)
+    emit('deleted')
     toast.add({
       title: 'Customers deleted',
       description: `${props.ids.length} customer${props.ids.length > 1 ? 's' : ''} have been deleted.`

@@ -14,7 +14,7 @@ const columnFilters = ref([{
   value: ''
 }])
 const columnVisibility = ref()
-const rowSelection = ref({ 1: true })
+const rowSelection = ref({})
 
 const { data, status, refresh, remove } = useCustomers()
 
@@ -29,6 +29,7 @@ const selectedIds = computed<number[]>(() =>
 async function deleteCustomer(row: Row<User>) {
   try {
     await remove([row.original.id])
+    rowSelection.value = {}
     toast.add({
       title: 'Customer deleted',
       description: `${row.original.name} has been deleted.`
@@ -210,7 +211,7 @@ const pagination = ref({
         />
 
         <div class="flex flex-wrap items-center gap-1.5">
-          <CustomersDeleteModal :ids="selectedIds">
+          <CustomersDeleteModal :ids="selectedIds" @deleted="rowSelection = {}">
             <UButton
               v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
               label="Delete"
