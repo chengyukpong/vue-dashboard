@@ -29,6 +29,20 @@ const links = [[{
     open.value = false
   }
 }, {
+  label: 'Customers (Vuetify)',
+  icon: 'i-lucide-table',
+  to: '/vuetify-customer',
+  onSelect: () => {
+    open.value = false
+  }
+}, {
+  label: 'Customers (Vuetify Zero)',
+  icon: 'i-lucide-box',
+  to: '/vuetifyjs0-customer',
+  onSelect: () => {
+    open.value = false
+  }
+}, {
   label: 'Settings',
   to: '/settings',
   icon: 'i-lucide-settings',
@@ -69,7 +83,8 @@ const links = [[{
   label: 'Help & Support',
   icon: 'i-lucide-info',
   to: 'https://github.com/nuxt-ui-templates/dashboard',
-  target: '_blank'
+  target: '_blank',
+  a: 'hi'
 }]] satisfies NavigationMenuItem[][]
 
 const groups = computed(() => [{
@@ -125,11 +140,11 @@ onMounted(async () => {
       :ui="{ footer: 'lg:border-t lg:border-default' }"
     >
       <template #header="{ collapsed }">
-        <TeamsMenu :collapsed="collapsed" />
+        <TeamsMenu :collapsed="collapsed"/>
       </template>
 
       <template #default="{ collapsed }">
-        <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default" />
+        <UDashboardSearchButton :collapsed="collapsed" class="bg-transparent ring-default"/>
 
         <UNavigationMenu
           :collapsed="collapsed"
@@ -149,14 +164,14 @@ onMounted(async () => {
       </template>
 
       <template #footer="{ collapsed }">
-        <UserMenu :collapsed="collapsed" />
+        <UserMenu :collapsed="collapsed"/>
       </template>
     </UDashboardSidebar>
 
-    <UDashboardSearch :groups="groups" />
+    <UDashboardSearch :groups="groups"/>
 
-    <slot />
+    <slot/>
 
-    <NotificationsSlideover />
+    <NotificationsSlideover/>
   </UDashboardGroup>
 </template>

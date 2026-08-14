@@ -3,7 +3,8 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/eslint',
     '@nuxt/ui',
-    '@vueuse/nuxt'
+    '@vueuse/nuxt',
+    'vuetify-nuxt-module'
   ],
 
   devtools: {
@@ -11,6 +12,10 @@ export default defineNuxtConfig({
   },
 
   css: ['~/assets/css/main.css'],
+
+  build: {
+    transpile: ['@vuetify/v0']
+  },
 
   routeRules: {
     '/api/**': {
@@ -26,6 +31,12 @@ export default defineNuxtConfig({
         commaDangle: 'never',
         braceStyle: '1tbs'
       }
+    }
+  },
+
+  vuetify: {
+    moduleOptions: {
+      prefixComposables: true
     }
   }
 })

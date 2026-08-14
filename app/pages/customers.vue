@@ -4,7 +4,15 @@ import { upperFirst } from 'scule'
 import { getPaginationRowModel } from '@tanstack/table-core'
 import type { Row, Table as TanstackTable } from '@tanstack/table-core'
 import type { User } from '~/types'
-import { TableRowActionDropdown, TableSelectAllCheckbox, TableSelectRowCheckbox, UAvatar, UBadge, UButton } from '#components'
+import {
+  TableRowActionDropdown,
+  TableSelectAllCheckbox,
+  TableSelectRowCheckbox,
+  UAvatar,
+  UBadge,
+  UButton,
+  UTable
+} from '#components'
 
 const toast = useToast()
 const table = useTemplateRef<{ tableApi: TanstackTable<User> }>('table')
