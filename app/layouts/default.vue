@@ -6,7 +6,7 @@ const toast = useToast()
 
 const open = ref(false)
 
-const links = [[{
+const mainLinks = [{
   label: 'Home',
   icon: 'i-lucide-house',
   to: '/',
@@ -74,7 +74,9 @@ const links = [[{
       open.value = false
     }
   }]
-}], [{
+}] satisfies NavigationMenuItem[]
+
+const footerLinks = [{
   label: 'Feedback',
   icon: 'i-lucide-message-circle',
   to: 'https://github.com/nuxt-ui-templates/dashboard',
@@ -85,12 +87,12 @@ const links = [[{
   to: 'https://github.com/nuxt-ui-templates/dashboard',
   target: '_blank',
   a: 'hi'
-}]] satisfies NavigationMenuItem[][]
+}] satisfies NavigationMenuItem[]
 
 const groups = computed(() => [{
   id: 'links',
   label: 'Go to',
-  items: links.flat()
+  items: [...mainLinks, ...footerLinks]
 }, {
   id: 'code',
   label: 'Code',
@@ -148,7 +150,7 @@ onMounted(async () => {
 
         <UNavigationMenu
           :collapsed="collapsed"
-          :items="links[0]"
+          :items="mainLinks"
           orientation="vertical"
           tooltip
           popover
@@ -156,7 +158,7 @@ onMounted(async () => {
 
         <UNavigationMenu
           :collapsed="collapsed"
-          :items="links[1]"
+          :items="footerLinks"
           orientation="vertical"
           tooltip
           class="mt-auto"
