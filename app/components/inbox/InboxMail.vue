@@ -8,19 +8,10 @@ defineProps<{
 
 const emits = defineEmits(['close'])
 
-const dropdownItems = [[{
-  label: 'Mark as unread',
-  icon: 'i-lucide-check-circle'
-}, {
-  label: 'Mark as important',
-  icon: 'i-lucide-triangle-alert'
-}], [{
-  label: 'Star thread',
-  icon: 'i-lucide-star'
-}, {
-  label: 'Mute thread',
-  icon: 'i-lucide-circle-pause'
-}]]
+const dropdownItems = [
+  [{ title: 'Mark as unread', icon: 'mdi-check-circle' }, { title: 'Mark as important', icon: 'mdi-alert' }],
+  [{ title: 'Star thread', icon: 'mdi-star' }, { title: 'Mute thread', icon: 'mdi-pause-circle' }]
+]
 
 const toast = useToast()
 
@@ -35,8 +26,7 @@ function onSubmit() {
 
     toast.add({
       title: 'Email sent',
-      description: 'Your email has been sent successfully',
-      icon: 'i-lucide-check-circle',
+      text: 'Your email has been sent successfully',
       color: 'success'
     })
 
@@ -46,120 +36,117 @@ function onSubmit() {
 </script>
 
 <template>
-  <UDashboardPanel id="inbox-2">
-    <UDashboardNavbar :title="mail.subject" :toggle="false">
-      <template #leading>
-        <UButton
-          icon="i-lucide-x"
-          color="neutral"
-          variant="ghost"
-          class="-ms-1.5"
-          @click="emits('close')"
-        />
-      </template>
-
-      <template #right>
-        <UTooltip text="Archive">
-          <UButton
-            icon="i-lucide-inbox"
-            color="neutral"
-            variant="ghost"
-          />
-        </UTooltip>
-
-        <UTooltip text="Reply">
-          <UButton icon="i-lucide-reply" color="neutral" variant="ghost" />
-        </UTooltip>
-
-        <UDropdownMenu :items="dropdownItems">
-          <UButton
-            icon="i-lucide-ellipsis-vertical"
-            color="neutral"
-            variant="ghost"
-          />
-        </UDropdownMenu>
-      </template>
-    </UDashboardNavbar>
-
-    <div class="flex flex-col sm:flex-row justify-between gap-1 p-4 sm:px-6 border-b border-default">
-      <div class="flex items-start gap-4 sm:my-1.5">
-        <UAvatar
-          v-bind="mail.from.avatar"
-          :alt="mail.from.name"
-          size="3xl"
-        />
-
-        <div class="min-w-0">
-          <p class="font-semibold text-highlighted">
-            {{ mail.from.name }}
-          </p>
-          <p class="text-muted">
-            {{ mail.from.email }}
-          </p>
-        </div>
+  <div class="d-flex flex-column h-100">
+    <div class="d-flex align-center justify-space-between pa-2 border-b">
+      <div class="d-flex align-center ga-2">
+        <VBtn icon="mdi-close" variant="text" size="small" @click="emits('close')" />
+        <span class="text-body-1 font-weight-medium text-truncate">
+          {{ mail.subject }}
+        </span>
       </div>
-
-      <p class="max-sm:pl-16 text-muted text-sm sm:mt-2">
-        {{ format(new Date(mail.date), 'dd MMM HH:mm') }}
-      </p>
+      <div class="d-flex align-center ga-1">
+        <VTooltip text="Archive">
+          <template #activator="{ props: tipProps }">
+            <VBtn v-bind="tipProps" icon="mdi-archive" variant="text" size="small" />
+          </template>
+        </VTooltip>
+        <VTooltip text="Reply">
+          <template #activator="{ props: tipProps }">
+            <VBtn v-bind="tipProps" icon="mdi-reply" variant="text" size="small" />
+          </template>
+        </VTooltip>
+        <VMenu>
+          <template #activator="{ props: menuProps }">
+            <VBtn v-bind="menuProps" icon="mdi-dots-vertical" variant="text" size="small" />
+          </template>
+          <VList density="compact" min-width="200">
+            <template v-for="(group, gi) in dropdownItems" :key="gi">
+              <VListItem
+                v-for="(item, ii) in group"
+                :key="ii"
+                :prepend-icon="item.icon"
+                :title="item.title"
+                link
+              />
+              <VDivider v-if="gi < dropdownItems.length - 1" />
+            </template>
+          </VList>
+        </VMenu>
+      </div>
     </div>
 
-    <div class="flex-1 p-4 sm:p-6 overflow-y-auto">
-      <p class="whitespace-pre-wrap">
+    <div class="d-flex flex-sm-row flex-column justify-space-between ga-1 pa-4 border-b">
+      <div class="d-flex align-start ga-4">
+        <VAvatar size="48">
+          <VImg
+            v-if="mail.from.avatar?.src"
+            :src="mail.from.avatar.src"
+            :alt="mail.from.name"
+          />
+          <VIcon v-else>mdi-account</VIcon>
+        </VAvatar>
+        <div>
+          <div class="font-weight-bold">
+            {{ mail.from.name }}
+          </div>
+          <div class="text-body-2 text-medium-emphasis">
+            {{ mail.from.email }}
+          </div>
+        </div>
+      </div>
+      <span class="text-body-2 text-medium-emphasis">
+        {{ format(new Date(mail.date), 'dd MMM HH:mm') }}
+      </span>
+    </div>
+
+    <div class="flex-1-1-0 overflow-y-auto pa-4">
+      <p style="white-space: pre-wrap">
         {{ mail.body }}
       </p>
     </div>
 
-    <div class="pb-4 px-4 sm:px-6 shrink-0">
-      <UCard variant="subtle" class="mt-auto" :ui="{ header: 'flex items-center gap-1.5 text-dimmed' }">
-        <template #header>
-          <UIcon name="i-lucide-reply" class="size-5" />
-
-          <span class="text-sm truncate">
+    <div class="pa-4">
+      <VCard variant="tonal">
+        <VCardItem>
+          <template #prepend>
+            <VIcon>mdi-reply</VIcon>
+          </template>
+          <VCardSubtitle class="text-truncate">
             Reply to {{ mail.from.name }} ({{ mail.from.email }})
-          </span>
-        </template>
-
-        <form @submit.prevent="onSubmit">
-          <UTextarea
+          </VCardSubtitle>
+        </VCardItem>
+        <VCardText>
+          <VTextarea
             v-model="reply"
-            color="neutral"
-            variant="none"
-            required
-            autoresize
+            variant="solo"
+            auto-grow
+            rows="4"
             placeholder="Write your reply..."
-            :rows="4"
             :disabled="loading"
-            class="w-full"
-            :ui="{ base: 'p-0 resize-none' }"
           />
-
-          <div class="flex items-center justify-between">
-            <UTooltip text="Attach file">
-              <UButton
-                color="neutral"
-                variant="ghost"
-                icon="i-lucide-paperclip"
-              />
-            </UTooltip>
-
-            <div class="flex items-center justify-end gap-2">
-              <UButton
-                color="neutral"
-                variant="ghost"
-                label="Save draft"
-              />
-              <UButton
-                type="submit"
-                color="neutral"
+          <div class="d-flex align-center justify-space-between mt-2">
+            <VTooltip text="Attach file">
+              <template #activator="{ props: tipProps }">
+                <VBtn v-bind="tipProps" icon="mdi-paperclip" variant="text" size="small" />
+              </template>
+            </VTooltip>
+            <div class="d-flex align-center ga-2">
+              <VBtn variant="text">
+                Save draft
+              </VBtn>
+              <VBtn
+                color="primary"
+                variant="flat"
                 :loading="loading"
-                label="Send"
-                icon="i-lucide-send"
-              />
+                prepend-icon="mdi-send"
+                @click="onSubmit"
+              >
+                Send
+              </VBtn>
             </div>
           </div>
-        </form>
-      </UCard>
+        </VCardText>
+      </VCard>
     </div>
-  </UDashboardPanel>
+  </div>
 </template>

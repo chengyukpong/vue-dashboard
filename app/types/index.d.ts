@@ -1,15 +1,18 @@
-import type { AvatarProps } from '@nuxt/ui'
-
 export type UserStatus = 'subscribed' | 'unsubscribed' | 'bounced'
 export type SaleStatus = 'paid' | 'failed' | 'refunded'
 
 export type CreateCustomerInput = Pick<User, 'name' | 'email'>
 
+export interface Avatar {
+  src?: string
+  alt?: string
+}
+
 export interface User {
   id: number
   name: string
   email: string
-  avatar?: AvatarProps
+  avatar?: Avatar
   status: UserStatus
   location: string
 }
@@ -27,7 +30,7 @@ export interface Member {
   name: string
   username: string
   role: 'member' | 'owner'
-  avatar: AvatarProps
+  avatar: Avatar
 }
 
 export interface Stat {
@@ -59,4 +62,19 @@ export type Period = 'daily' | 'weekly' | 'monthly'
 export interface Range {
   start: Date
   end: Date
+}
+
+export interface NavigationChild {
+  label: string
+  to: string
+  exact?: boolean
+}
+
+export interface NavigationItem {
+  label: string
+  icon?: string
+  to?: string
+  badge?: string
+  external?: boolean
+  children?: NavigationChild[]
 }

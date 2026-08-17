@@ -1,60 +1,61 @@
 <script setup lang="ts">
-import type { DropdownMenuItem } from '@nuxt/ui'
 import type { Member } from '~/types'
 
 defineProps<{
   members: Member[]
 }>()
 
-const items = [{
-  label: 'Edit member',
-  onSelect: () => console.log('Edit member')
-}, {
-  label: 'Remove member',
-  color: 'error' as const,
-  onSelect: () => console.log('Remove member')
-}] satisfies DropdownMenuItem[]
+const items = [
+  { title: 'Edit member', action: () => console.log('Edit member') },
+  { title: 'Remove member', color: 'error', action: () => console.log('Remove member') }
+]
 </script>
 
 <template>
-  <ul role="list" class="divide-y divide-default">
-    <li
-      v-for="(member, index) in members"
-      :key="index"
-      class="flex items-center justify-between gap-3 py-3 px-4 sm:px-6"
-    >
-      <div class="flex items-center gap-3 min-w-0">
-        <UAvatar
-          v-bind="member.avatar"
-          size="md"
-        />
-
-        <div class="text-sm min-w-0">
-          <p class="text-highlighted font-medium truncate">
-            {{ member.name }}
-          </p>
-          <p class="text-muted truncate">
-            {{ member.username }}
-          </p>
-        </div>
-      </div>
-
-      <div class="flex items-center gap-3">
-        <USelect
-          :model-value="member.role"
-          :items="['member', 'owner']"
-          color="neutral"
-          :ui="{ value: 'capitalize', item: 'capitalize' }"
-        />
-
-        <UDropdownMenu :items="items" :content="{ align: 'end' }">
-          <UButton
-            icon="i-lucide-ellipsis-vertical"
-            color="neutral"
-            variant="ghost"
-          />
-        </UDropdownMenu>
-      </div>
-    </li>
-  </ul>
+  <VList density="comfortable">
+    <template v-for="(member, index) in members" :key="index">
+      <VListItem>
+        <template #prepend>
+          <VAvatar size="40" class="mr-3">
+            <VImg :src="member.avatar?.src" :alt="member.name" />
+          </VAvatar>
+        </template>
+        <VListItemTitle class="font-weight-medium">
+          {{ member.name }}
+        </VListItemTitle>
+        <VListItemSubtitle>
+          {{ member.username }}
+        </VListItemSubtitle>
+        <template #append>
+          <div class="d-flex align-center ga-3">
+            <VSelect
+              :model-value="member.role"
+              :items="['member', 'owner']"
+              density="compact"
+              variant="outlined"
+              hide-details
+              style="max-width: 140px"
+              class="text-capitalize"
+            />
+            <VMenu>
+              <template #activator="{ props }">
+                <VBtn v-bind="props" icon="mdi-dots-vertical" variant="text" size="small" />
+              </template>
+              <VList density="compact" min-width="200">
+                <VListItem
+                  v-for="item in items"
+                  :key="item.title"
+                  :title="item.title"
+                  :base-color="item.color === 'error' ? 'error' : undefined"
+                  link
+                  @click="item.action()"
+                />
+              </VList>
+            </VMenu>
+          </div>
+        </template>
+      </VListItem>
+      <VDivider v-if="index < members.length - 1" />
+    </template>
+  </VList>
 </template>

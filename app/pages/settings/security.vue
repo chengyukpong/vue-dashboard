@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import * as z from 'zod'
-import type { FormError } from '@nuxt/ui'
 
 const passwordSchema = z.object({
   current: z.string().min(8, 'Must be at least 8 characters'),
@@ -14,56 +13,83 @@ const password = reactive<Partial<PasswordSchema>>({
   new: ''
 })
 
-const validate = (state: Partial<PasswordSchema>): FormError[] => {
-  const errors: FormError[] = []
-  if (state.current && state.new && state.current === state.new) {
-    errors.push({ name: 'new', message: 'Passwords must be different' })
+const errors = ref<Record<string, string>>({})
+
+function validate() {
+  const errs: Record<string, string> = {}
+
+  if (password.current && password.current.length < 8) {
+    errs.current = 'Must be at least 8 characters'
   }
-  return errors
+  if (password.new && password.new.length < 8) {
+    errs.new = 'Must be at least 8 characters'
+  }
+  if (password.current && password.new && password.current === password.new) {
+    errs.new = 'Passwords must be different'
+  }
+
+  errors.value = errs
+  return Object.keys(errs).length === 0
+}
+
+function onSubmit() {
+  if (!validate()) return
+  console.log({ ...password })
 }
 </script>
 
 <template>
-  <UPageCard
-    title="Password"
-    description="Confirm your current password before setting a new one."
-    variant="subtle"
-  >
-    <UForm
-      :schema="passwordSchema"
-      :state="password"
-      :validate="validate"
-      class="flex flex-col gap-4 max-w-xs"
-    >
-      <UFormField name="current">
-        <UInput
+  <VCard variant="flat" border class="mb-6">
+    <VCardItem>
+      <VCardTitle class="text-h6">
+        Password
+      </VCardTitle>
+      <VCardSubtitle>
+        Confirm your current password before setting a new one.
+      </VCardSubtitle>
+    </VCardItem>
+    <VCardText>
+      <form class="d-flex flex-column ga-4" style="max-width: 360px" @submit.prevent="onSubmit">
+        <VTextField
           v-model="password.current"
           type="password"
-          placeholder="Current password"
-          class="w-full"
+          label="Current password"
+          variant="outlined"
+          density="compact"
+          :error-messages="errors.current"
+          hide-details="auto"
         />
-      </UFormField>
-
-      <UFormField name="new">
-        <UInput
+        <VTextField
           v-model="password.new"
           type="password"
-          placeholder="New password"
-          class="w-full"
+          label="New password"
+          variant="outlined"
+          density="compact"
+          :error-messages="errors.new"
+          hide-details="auto"
         />
-      </UFormField>
+        <div>
+          <VBtn type="submit" color="primary" variant="flat">
+            Update
+          </VBtn>
+        </div>
+      </form>
+    </VCardText>
+  </VCard>
 
-      <UButton label="Update" class="w-fit" type="submit" />
-    </UForm>
-  </UPageCard>
-
-  <UPageCard
-    title="Account"
-    description="No longer want to use our service? You can delete your account here. This action is not reversible. All information related to this account will be deleted permanently."
-    class="bg-linear-to-tl from-error/10 from-5% to-default"
-  >
-    <template #footer>
-      <UButton label="Delete account" color="error" />
-    </template>
-  </UPageCard>
+  <VCard variant="flat" border>
+    <VCardItem>
+      <VCardTitle class="text-h6">
+        Account
+      </VCardTitle>
+      <VCardSubtitle>
+        No longer want to use our service? You can delete your account here. This action is not reversible. All information related to this account will be deleted permanently.
+      </VCardSubtitle>
+    </VCardItem>
+    <VCardActions>
+      <VBtn color="error" variant="flat">
+        Delete account
+      </VBtn>
+    </VCardActions>
+  </VCard>
 </template>

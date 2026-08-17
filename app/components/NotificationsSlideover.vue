@@ -8,45 +8,54 @@ const { data: notifications } = await useFetch<Notification[]>('/api/notificatio
 </script>
 
 <template>
-  <USlideover
-    v-model:open="isNotificationsSlideoverOpen"
-    title="Notifications"
+  <VNavigationDrawer
+    v-model="isNotificationsSlideoverOpen"
+    location="right"
+    temporary
+    width="400"
   >
-    <template #body>
-      <NuxtLink
+    <VListItem class="px-4 py-3">
+      <VListItemTitle class="text-h6 font-weight-bold">
+        Notifications
+      </VListItemTitle>
+    </VListItem>
+    <VDivider />
+    <VList density="compact" class="overflow-y-auto">
+      <VListItem
         v-for="notification in notifications"
         :key="notification.id"
         :to="`/inbox?id=${notification.id}`"
-        class="px-3 py-2.5 rounded-md hover:bg-elevated/50 flex items-center gap-3 relative -mx-3 first:-mt-3 last:-mb-3"
+        link
+        class="py-2"
       >
-        <UChip
-          color="error"
-          :show="!!notification.unread"
-          inset
-        >
-          <UAvatar
-            v-bind="notification.sender.avatar"
-            :alt="notification.sender.name"
-            size="md"
-          />
-        </UChip>
-
-        <div class="text-sm flex-1">
-          <p class="flex items-center justify-between">
-            <span class="text-highlighted font-medium">{{ notification.sender.name }}</span>
-
-            <time
-              :datetime="notification.date"
-              class="text-muted text-xs"
-              v-text="formatTimeAgo(new Date(notification.date))"
+        <template #prepend>
+          <VAvatar size="32" class="mr-3">
+            <VImg
+              v-if="notification.sender.avatar?.src"
+              :src="notification.sender.avatar.src"
+              :alt="notification.sender.name"
             />
-          </p>
-
-          <p class="text-dimmed">
-            {{ notification.body }}
-          </p>
-        </div>
-      </NuxtLink>
-    </template>
-  </USlideover>
+            <VIcon v-else>mdi-account</VIcon>
+          </VAvatar>
+          <VBadge
+            v-if="notification.unread"
+            color="error"
+            dot
+            offset
+          />
+        </template>
+        <VListItemTitle class="font-weight-medium">
+          {{ notification.sender.name }}
+        </VListItemTitle>
+        <VListItemSubtitle class="text-wrap">
+          {{ notification.body }}
+        </VListItemSubtitle>
+        <template #append>
+          <span class="text-caption text-medium-emphasis">
+            {{ formatTimeAgo(new Date(notification.date)) }}
+          </span>
+        </template>
+      </VListItem>
+    </VList>
+  </VNavigationDrawer>
 </template>

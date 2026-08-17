@@ -14,32 +14,38 @@ const filteredMembers = computed(() => {
 
 <template>
   <div>
-    <UPageCard
-      title="Members"
-      description="Invite new members by email address."
-      variant="naked"
-      orientation="horizontal"
-      class="mb-4"
-    >
-      <UButton
-        label="Invite people"
-        color="neutral"
-        class="w-fit lg:ms-auto"
-      />
-    </UPageCard>
+    <VCard class="mb-4" variant="flat" border>
+      <VCardItem>
+        <div class="d-flex align-center justify-space-between flex-wrap ga-2">
+          <div>
+            <VCardTitle class="text-h6">
+              Members
+            </VCardTitle>
+            <VCardSubtitle>
+              Invite new members by email address.
+            </VCardSubtitle>
+          </div>
+          <VBtn color="primary" variant="flat">
+            Invite people
+          </VBtn>
+        </div>
+      </VCardItem>
+    </VCard>
 
-    <UPageCard variant="subtle" :ui="{ container: 'p-0 sm:p-0 gap-y-0', wrapper: 'items-stretch', header: 'p-4 mb-0 border-b border-default' }">
-      <template #header>
-        <UInput
+    <VCard variant="flat" border>
+      <VCardItem>
+        <VTextField
           v-model="q"
-          icon="i-lucide-search"
+          prepend-inner-icon="mdi-magnify"
           placeholder="Search members"
+          variant="outlined"
+          density="compact"
+          hide-details
           autofocus
-          class="w-full"
         />
-      </template>
-
+      </VCardItem>
+      <VDivider />
       <SettingsMembersList :members="filteredMembers" />
-    </UPageCard>
+    </VCard>
   </div>
 </template>

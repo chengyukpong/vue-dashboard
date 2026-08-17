@@ -38,34 +38,49 @@ const sections = [{
 }]
 
 async function onChange() {
-  // Do something with data
   console.log(state)
 }
 </script>
 
 <template>
-  <div v-for="(section, index) in sections" :key="index">
-    <UPageCard
-      :title="section.title"
-      :description="section.description"
-      variant="naked"
-      class="mb-4"
-    />
+  <div>
+    <template v-for="(section, index) in sections" :key="index">
+      <VCard class="mb-4" variant="flat" border>
+        <VCardItem>
+          <VCardTitle class="text-h6">
+            {{ section.title }}
+          </VCardTitle>
+          <VCardSubtitle>
+            {{ section.description }}
+          </VCardSubtitle>
+        </VCardItem>
+      </VCard>
 
-    <UPageCard variant="subtle" :ui="{ container: 'divide-y divide-default' }">
-      <UFormField
-        v-for="field in section.fields"
-        :key="field.name"
-        :name="field.name"
-        :label="field.label"
-        :description="field.description"
-        class="flex items-center justify-between not-last:pb-4 gap-2"
-      >
-        <USwitch
-          v-model="state[field.name]"
-          @update:model-value="onChange"
-        />
-      </UFormField>
-    </UPageCard>
+      <VCard variant="flat" border class="mb-6">
+        <VList density="comfortable">
+          <template v-for="(field, fi) in section.fields" :key="field.name">
+            <VListItem>
+              <div class="d-flex align-center justify-space-between">
+                <div class="flex-1-1-0">
+                  <div class="text-body-1 font-weight-medium">
+                    {{ field.label }}
+                  </div>
+                  <div class="text-body-2 text-medium-emphasis">
+                    {{ field.description }}
+                  </div>
+                </div>
+                <VSwitch
+                  v-model="state[field.name]"
+                  color="primary"
+                  hide-details
+                  @update:model-value="onChange"
+                />
+              </div>
+            </VListItem>
+            <VDivider v-if="fi < section.fields.length - 1" />
+          </template>
+        </VList>
+      </VCard>
+    </template>
   </div>
 </template>

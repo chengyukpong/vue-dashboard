@@ -1,28 +1,10 @@
 <script setup lang="ts">
-import type { DropdownMenuItem, TableColumn } from '@nuxt/ui'
 import { upperFirst } from 'scule'
-import { getPaginationRowModel } from '@tanstack/table-core'
-import type { Row, Table as TanstackTable } from '@tanstack/table-core'
 import type { User } from '~/types'
-import {
-  TableRowActionDropdown,
-  TableSelectAllCheckbox,
-  TableSelectRowCheckbox,
-  UAvatar,
-  UBadge,
-  UButton,
-  UTable
-} from '#components'
 
 const toast = useToast()
-const table = useTemplateRef<{ tableApi: TanstackTable<User> }>('table')
-
-const columnFilters = ref([{
-  id: 'email',
-  value: ''
-}])
-const columnVisibility = ref()
-const rowSelection = ref({})
+const search = ref('')
+const statusFilter = ref('all')
 
 const { data, status, refresh, remove } = useCustomers()
 
@@ -30,61 +12,52 @@ if (data.value.length === 0 && status.value === 'idle') {
   await refresh()
 }
 
-const selectedIds = computed<number[]>(() =>
-  table.value?.tableApi?.getSelectedRowModel().rows.map(row => row.original.id) ?? []
-)
+const selected = ref<User[]>([])
 
-async function deleteCustomer(row: Row<User>) {
+async function deleteCustomer(row: User) {
   try {
-    await remove([row.original.id])
-    rowSelection.value = {}
+    await remove([row.id])
+    selected.value = selected.value.filter(s => s.id !== row.id)
     toast.add({
       title: 'Customer deleted',
-      description: `${row.original.name} has been deleted.`
+      text: `${row.name} has been deleted.`
     })
   } catch {
     toast.add({
       title: 'Delete failed',
-      description: 'The customer could not be deleted.',
+      text: 'The customer could not be deleted.',
       color: 'error'
     })
   }
 }
 
-function getRowItems(row: Row<User>): DropdownMenuItem[] {
+function getRowItems(row: User) {
   return [
-    {
-      type: 'label',
-      label: 'Actions'
-    },
+    { type: 'label' as const, label: 'Actions' },
     {
       label: 'Copy customer ID',
-      icon: 'i-lucide-copy',
+      icon: 'mdi-content-copy',
       onSelect() {
-        navigator.clipboard.writeText(row.original.id.toString())
+        navigator.clipboard.writeText(row.id.toString())
         toast.add({
           title: 'Copied to clipboard',
-          description: 'Customer ID copied to clipboard'
+          text: 'Customer ID copied to clipboard'
         })
       }
     },
-    {
-      type: 'separator'
-    },
+    { type: 'separator' as const },
     {
       label: 'View customer details',
-      icon: 'i-lucide-list'
+      icon: 'mdi-format-list-bulleted'
     },
     {
       label: 'View customer payments',
-      icon: 'i-lucide-wallet'
+      icon: 'mdi-wallet'
     },
-    {
-      type: 'separator'
-    },
+    { type: 'separator' as const },
     {
       label: 'Delete customer',
-      icon: 'i-lucide-trash',
+      icon: 'mdi-delete',
       color: 'error',
       onSelect() {
         deleteCustomer(row)
@@ -93,228 +66,143 @@ function getRowItems(row: Row<User>): DropdownMenuItem[] {
   ]
 }
 
-const columns: TableColumn<User>[] = [
-  {
-    id: 'select',
-    header: ({ table }) => h(TableSelectAllCheckbox, { table }),
-    cell: ({ row }) => h(TableSelectRowCheckbox, { row })
-  },
-  {
-    accessorKey: 'id',
-    header: 'ID'
-  },
-  {
-    accessorKey: 'name',
-    header: 'Name',
-    cell: ({ row }) => {
-      return h('div', { class: 'flex items-center gap-3' }, [
-        h(UAvatar, {
-          ...row.original.avatar,
-          size: 'lg'
-        }),
-        h('div', undefined, [
-          h('p', { class: 'font-medium text-highlighted' }, row.original.name),
-          h('p', { class: '' }, `@${row.original.name}`)
-        ])
-      ])
-    }
-  },
-  {
-    accessorKey: 'email',
-    header: ({ column }) => {
-      const isSorted = column.getIsSorted()
-
-      return h(UButton, {
-        color: 'neutral',
-        variant: 'ghost',
-        label: 'Email',
-        icon: isSorted
-          ? isSorted === 'asc'
-            ? 'i-lucide-arrow-up-narrow-wide'
-            : 'i-lucide-arrow-down-wide-narrow'
-          : 'i-lucide-arrow-up-down',
-        class: '-mx-2.5',
-        onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
-      })
-    }
-  },
-  {
-    accessorKey: 'location',
-    header: 'Location',
-    cell: ({ row }) => row.original.location
-  },
-  {
-    accessorKey: 'status',
-    header: 'Status',
-    filterFn: 'equals',
-    cell: ({ row }) => {
-      const color = {
-        subscribed: 'success' as const,
-        unsubscribed: 'error' as const,
-        bounced: 'warning' as const
-      }[row.original.status]
-
-      return h(UBadge, { class: 'capitalize', variant: 'subtle', color }, () =>
-        row.original.status
-      )
-    }
-  },
-  {
-    id: 'actions',
-    cell: ({ row }) => h(TableRowActionDropdown, { items: getRowItems(row) })
-  }
+const headers = [
+  { title: 'ID', key: 'id' },
+  { title: 'Name', key: 'name' },
+  { title: 'Email', key: 'email' },
+  { title: 'Location', key: 'location' },
+  { title: 'Status', key: 'status' },
+  { title: 'Actions', key: 'actions', sortable: false, align: 'end' as const }
 ]
 
-const statusFilter = ref('all')
+const statusColor = (status: User['status']) => ({
+  subscribed: 'success',
+  unsubscribed: 'error',
+  bounced: 'warning'
+})[status]
 
-watch(() => statusFilter.value, (newVal) => {
-  if (!table?.value?.tableApi) return
-
-  const statusColumn = table.value.tableApi.getColumn('status')
-  if (!statusColumn) return
-
-  if (newVal === 'all') {
-    statusColumn.setFilterValue(undefined)
-  } else {
-    statusColumn.setFilterValue(newVal)
-  }
+const filteredData = computed(() => {
+  if (statusFilter.value === 'all') return data.value
+  return data.value.filter(item => item.status === statusFilter.value)
 })
 
-const email = computed({
-  get: (): string => {
-    return (table.value?.tableApi?.getColumn('email')?.getFilterValue() as string) || ''
-  },
-  set: (value: string) => {
-    table.value?.tableApi?.getColumn('email')?.setFilterValue(value || undefined)
-  }
-})
+const selectedIds = computed(() => selected.value.map(s => s.id))
 
-const pagination = ref({
-  pageIndex: 0,
-  pageSize: 10
+const columnItems = computed(() => {
+  return headers
+    .filter(h => h.key !== 'actions' && h.key !== 'id')
+    .map(h => ({
+      label: upperFirst(h.key),
+      key: h.key,
+      visible: true
+    }))
 })
 </script>
 
 <template>
-  <UDashboardPanel id="customers">
-    <template #header>
-      <UDashboardNavbar title="Customers">
-        <template #leading>
-          <UDashboardSidebarCollapse />
-        </template>
+  <div>
+    <div class="d-flex align-center justify-space-between mb-4">
+      <h1 class="text-h5 font-weight-bold">
+        Customers
+      </h1>
+      <CustomersAddModal />
+    </div>
 
-        <template #right>
-          <CustomersAddModal />
-        </template>
-      </UDashboardNavbar>
-    </template>
-
-    <template #body>
-      <div class="flex flex-wrap items-center justify-between gap-1.5">
-        <UInput
-          v-model="email"
-          class="max-w-sm"
-          icon="i-lucide-search"
-          placeholder="Filter emails..."
-        />
-
-        <div class="flex flex-wrap items-center gap-1.5">
-          <CustomersDeleteModal :ids="selectedIds" @deleted="rowSelection = {}">
-            <UButton
-              v-if="table?.tableApi?.getFilteredSelectedRowModel().rows.length"
-              label="Delete"
-              color="error"
-              variant="subtle"
-              icon="i-lucide-trash"
-            >
-              <template #trailing>
-                <UKbd>
-                  {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length }}
-                </UKbd>
-              </template>
-            </UButton>
-          </CustomersDeleteModal>
-
-          <USelect
-            v-model="statusFilter"
-            :items="[
-              { label: 'All', value: 'all' },
-              { label: 'Subscribed', value: 'subscribed' },
-              { label: 'Unsubscribed', value: 'unsubscribed' },
-              { label: 'Bounced', value: 'bounced' }
-            ]"
-            :ui="{ trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
-            placeholder="Filter status"
-            class="min-w-28"
-          />
-          <UDropdownMenu
-            :items="
-              table?.tableApi
-                ?.getAllColumns()
-                .filter((column: any) => column.getCanHide())
-                .map((column: any) => ({
-                  label: upperFirst(column.id),
-                  type: 'checkbox' as const,
-                  checked: column.getIsVisible(),
-                  onUpdateChecked(checked: boolean) {
-                    table?.tableApi?.getColumn(column.id)?.toggleVisibility(!!checked)
-                  },
-                  onSelect(e?: Event) {
-                    e?.preventDefault()
-                  }
-                }))
-            "
-            :content="{ align: 'end' }"
-          >
-            <UButton
-              label="Display"
-              color="neutral"
-              variant="outline"
-              trailing-icon="i-lucide-settings-2"
-            />
-          </UDropdownMenu>
-        </div>
-      </div>
-
-      <UTable
-        ref="table"
-        v-model:column-filters="columnFilters"
-        v-model:column-visibility="columnVisibility"
-        v-model:row-selection="rowSelection"
-        v-model:pagination="pagination"
-        :pagination-options="{
-          getPaginationRowModel: getPaginationRowModel()
-        }"
-        class="shrink-0"
-        :data="data"
-        :columns="columns"
-        :get-row-id="(row: User) => String(row.id)"
-        :loading="status === 'pending'"
-        :ui="{
-          base: 'table-fixed border-separate border-spacing-0',
-          thead: '[&>tr]:bg-elevated/50 [&>tr]:after:content-none',
-          tbody: '[&>tr]:last:[&>td]:border-b-0',
-          th: 'py-2 first:rounded-l-lg last:rounded-r-lg border-y border-default first:border-l last:border-r',
-          td: 'border-b border-default',
-          separator: 'h-0'
-        }"
+    <div class="d-flex flex-wrap align-center justify-space-between ga-2 mb-4">
+      <VTextField
+        v-model="search"
+        density="compact"
+        variant="outlined"
+        prepend-inner-icon="mdi-magnify"
+        placeholder="Filter emails..."
+        hide-details
+        style="max-width: 300px"
       />
 
-      <div class="flex items-center justify-between gap-3 border-t border-default pt-4 mt-auto">
-        <div class="text-sm text-muted">
-          {{ table?.tableApi?.getFilteredSelectedRowModel().rows.length || 0 }} of
-          {{ table?.tableApi?.getFilteredRowModel().rows.length || 0 }} row(s) selected.
-        </div>
+      <div class="d-flex align-center ga-2">
+        <CustomersDeleteModal :ids="selectedIds" @deleted="selected = []">
+          <template v-if="selected.length">
+            <VBtn color="error" variant="tonal" prepend-icon="mdi-delete">
+              Delete
+              <VChip size="small" class="ml-2">
+                {{ selected.length }}
+              </VChip>
+            </VBtn>
+          </template>
+        </CustomersDeleteModal>
 
-        <div class="flex items-center gap-1.5">
-          <UPagination
-            :default-page="(table?.tableApi?.getState().pagination.pageIndex || 0) + 1"
-            :items-per-page="table?.tableApi?.getState().pagination.pageSize"
-            :total="table?.tableApi?.getFilteredRowModel().rows.length"
-            @update:page="(p: number) => table?.tableApi?.setPageIndex(p - 1)"
-          />
-        </div>
+        <VSelect
+          v-model="statusFilter"
+          :items="[
+            { title: 'All', value: 'all' },
+            { title: 'Subscribed', value: 'subscribed' },
+            { title: 'Unsubscribed', value: 'unsubscribed' },
+            { title: 'Bounced', value: 'bounced' }
+          ]"
+          item-title="title"
+          item-value="value"
+          density="compact"
+          variant="outlined"
+          hide-details
+          style="max-width: 180px"
+        />
       </div>
-    </template>
-  </UDashboardPanel>
+    </div>
+
+    <VCard variant="flat" border>
+      <VDataTable
+        v-model="selected"
+        :headers="headers"
+        :items="filteredData"
+        :search="search"
+        :loading="status === 'pending'"
+        item-value="id"
+        show-select
+        hover
+        :items-per-page="10"
+        :items-per-page-options="[5, 10, 25, 50]"
+      >
+        <template #item.name="{ item }">
+          <div class="d-flex align-center ga-3">
+            <VAvatar size="36" :image="item.avatar?.src" />
+            <div>
+              <div class="font-weight-medium">
+                {{ item.name }}
+              </div>
+              <div class="text-caption text-medium-emphasis">
+                @{{ item.name }}
+              </div>
+            </div>
+          </div>
+        </template>
+
+        <template #item.status="{ item }">
+          <VChip :color="statusColor(item.status)" size="small" class="text-capitalize">
+            {{ item.status }}
+          </VChip>
+        </template>
+
+        <template #item.actions="{ item }">
+          <VMenu>
+            <template #activator="{ props }">
+              <VBtn v-bind="props" icon="mdi-dots-vertical" variant="text" size="small" />
+            </template>
+            <VList density="compact" min-width="200">
+              <template v-for="(menuItem, i) in getRowItems(item)" :key="i">
+                <VDivider v-if="menuItem.type === 'separator'" />
+                <VListItem
+                  v-else-if="menuItem.type !== 'label'"
+                  :prepend-icon="menuItem.icon"
+                  :title="menuItem.label"
+                  :base-color="menuItem.color === 'error' ? 'error' : undefined"
+                  link
+                  @click="menuItem.onSelect?.()"
+                />
+              </template>
+            </VList>
+          </VMenu>
+        </template>
+      </VDataTable>
+    </VCard>
+  </div>
 </template>

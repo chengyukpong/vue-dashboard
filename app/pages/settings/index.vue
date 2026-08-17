@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import * as z from 'zod'
-import type { FormSubmitEvent } from '@nuxt/ui'
 
 const fileRef = ref<HTMLInputElement>()
 
@@ -21,15 +20,19 @@ const profile = reactive<Partial<ProfileSchema>>({
   avatar: undefined,
   bio: undefined
 })
+
 const toast = useToast()
-async function onSubmit(event: FormSubmitEvent<ProfileSchema>) {
+
+async function onSubmit() {
+  const valid = profileSchema.safeParse(profile)
+  if (!valid.success) return
+
   toast.add({
     title: 'Success',
-    description: 'Your settings have been updated.',
-    icon: 'i-lucide-check',
+    text: 'Your settings have been updated.',
     color: 'success'
   })
-  console.log(event.data)
+  console.log(valid.data)
 }
 
 function onFileChange(e: Event) {
@@ -48,111 +51,137 @@ function onFileClick() {
 </script>
 
 <template>
-  <UForm
-    id="settings"
-    :schema="profileSchema"
-    :state="profile"
-    @submit="onSubmit"
-  >
-    <UPageCard
-      title="Profile"
-      description="These informations will be displayed publicly."
-      variant="naked"
-      orientation="horizontal"
-      class="mb-4"
-    >
-      <UButton
-        form="settings"
-        label="Save changes"
-        color="neutral"
-        type="submit"
-        class="w-fit lg:ms-auto"
-      />
-    </UPageCard>
-
-    <UPageCard variant="subtle">
-      <UFormField
-        name="name"
-        label="Name"
-        description="Will appear on receipts, invoices, and other communication."
-        required
-        class="flex max-sm:flex-col justify-between items-start gap-4"
-      >
-        <UInput
-          v-model="profile.name"
-          autocomplete="off"
-        />
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="email"
-        label="Email"
-        description="Used to sign in, for email receipts and product updates."
-        required
-        class="flex max-sm:flex-col justify-between items-start gap-4"
-      >
-        <UInput
-          v-model="profile.email"
-          type="email"
-          autocomplete="off"
-        />
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="username"
-        label="Username"
-        description="Your unique username for logging in and your profile URL."
-        required
-        class="flex max-sm:flex-col justify-between items-start gap-4"
-      >
-        <UInput
-          v-model="profile.username"
-          type="username"
-          autocomplete="off"
-        />
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="avatar"
-        label="Avatar"
-        description="JPG, GIF or PNG. 1MB Max."
-        class="flex max-sm:flex-col justify-between sm:items-center gap-4"
-      >
-        <div class="flex flex-wrap items-center gap-3">
-          <UAvatar
-            :src="profile.avatar"
-            :alt="profile.name"
-            size="lg"
-          />
-          <UButton
-            label="Choose"
-            color="neutral"
-            @click="onFileClick"
-          />
-          <input
-            ref="fileRef"
-            type="file"
-            class="hidden"
-            accept=".jpg, .jpeg, .png, .gif"
-            @change="onFileChange"
-          >
+  <form @submit.prevent="onSubmit">
+    <VCard class="mb-4" variant="flat" border>
+      <VCardItem>
+        <div class="d-flex align-center justify-space-between flex-wrap ga-2">
+          <div>
+            <VCardTitle class="text-h6">
+              Profile
+            </VCardTitle>
+            <VCardSubtitle>
+              These informations will be displayed publicly.
+            </VCardSubtitle>
+          </div>
+          <VBtn type="submit" color="primary" variant="flat">
+            Save changes
+          </VBtn>
         </div>
-      </UFormField>
-      <USeparator />
-      <UFormField
-        name="bio"
-        label="Bio"
-        description="Brief description for your profile. URLs are hyperlinked."
-        class="flex max-sm:flex-col justify-between items-start gap-4"
-        :ui="{ container: 'w-full' }"
-      >
-        <UTextarea
-          v-model="profile.bio"
-          :rows="5"
-          autoresize
-          class="w-full"
-        />
-      </UFormField>
-    </UPageCard>
-  </UForm>
+      </VCardItem>
+    </VCard>
+
+    <VCard variant="flat" border>
+      <VCardItem>
+        <div class="d-flex flex-sm-row flex-column justify-space-between align-start ga-4 py-2">
+          <div>
+            <div class="text-body-1 font-weight-medium">
+              Name
+            </div>
+            <div class="text-body-2 text-medium-emphasis">
+              Will appear on receipts, invoices, and other communication.
+            </div>
+          </div>
+          <VTextField
+            v-model="profile.name"
+            variant="outlined"
+            density="compact"
+            autocomplete="off"
+            hide-details
+            style="max-width: 320px; width: 100%"
+          />
+        </div>
+      </VCardItem>
+      <VDivider />
+      <VCardItem>
+        <div class="d-flex flex-sm-row flex-column justify-space-between align-start ga-4 py-2">
+          <div>
+            <div class="text-body-1 font-weight-medium">
+              Email
+            </div>
+            <div class="text-body-2 text-medium-emphasis">
+              Used to sign in, for email receipts and product updates.
+            </div>
+          </div>
+          <VTextField
+            v-model="profile.email"
+            type="email"
+            variant="outlined"
+            density="compact"
+            autocomplete="off"
+            hide-details
+            style="max-width: 320px; width: 100%"
+          />
+        </div>
+      </VCardItem>
+      <VDivider />
+      <VCardItem>
+        <div class="d-flex flex-sm-row flex-column justify-space-between align-start ga-4 py-2">
+          <div>
+            <div class="text-body-1 font-weight-medium">
+              Username
+            </div>
+            <div class="text-body-2 text-medium-emphasis">
+              Your unique username for logging in and your profile URL.
+            </div>
+          </div>
+          <VTextField
+            v-model="profile.username"
+            type="username"
+            variant="outlined"
+            density="compact"
+            autocomplete="off"
+            hide-details
+            style="max-width: 320px; width: 100%"
+          />
+        </div>
+      </VCardItem>
+      <VDivider />
+      <VCardItem>
+        <div class="d-flex flex-sm-row flex-column justify-space-between align-center ga-4 py-2">
+          <div>
+            <div class="text-body-1 font-weight-medium">
+              Avatar
+            </div>
+            <div class="text-body-2 text-medium-emphasis">
+              JPG, GIF or PNG. 1MB Max.
+            </div>
+          </div>
+          <div class="d-flex align-center ga-3">
+            <VAvatar size="40">
+              <VImg v-if="profile.avatar" :src="profile.avatar" :alt="profile.name" />
+              <VIcon v-else>mdi-account</VIcon>
+            </VAvatar>
+            <VBtn variant="tonal" @click="onFileClick">
+              Choose
+            </VBtn>
+            <input
+              ref="fileRef"
+              type="file"
+              class="d-none"
+              accept=".jpg, .jpeg, .png, .gif"
+              @change="onFileChange"
+            >
+          </div>
+        </div>
+      </VCardItem>
+      <VDivider />
+      <VCardItem>
+        <div class="py-2 w-100">
+          <div class="text-body-1 font-weight-medium mb-1">
+            Bio
+          </div>
+          <div class="text-body-2 text-medium-emphasis mb-2">
+            Brief description for your profile. URLs are hyperlinked.
+          </div>
+          <VTextarea
+            v-model="profile.bio"
+            variant="outlined"
+            auto-grow
+            rows="5"
+            class="w-100"
+          />
+        </div>
+      </VCardItem>
+    </VCard>
+  </form>
 </template>

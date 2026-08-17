@@ -12,25 +12,16 @@ const days = computed(() => eachDayOfInterval(props.range))
 
 const periods = computed<Period[]>(() => {
   if (days.value.length <= 8) {
-    return [
-      'daily'
-    ]
+    return ['daily']
   }
 
   if (days.value.length <= 31) {
-    return [
-      'daily',
-      'weekly'
-    ]
+    return ['daily', 'weekly']
   }
 
-  return [
-    'weekly',
-    'monthly'
-  ]
+  return ['weekly', 'monthly']
 })
 
-// Ensure the model value is always a valid period
 watch(periods, () => {
   if (!periods.value.includes(model.value)) {
     model.value = periods.value[0]!
@@ -39,11 +30,13 @@ watch(periods, () => {
 </script>
 
 <template>
-  <USelect
+  <VSelect
     v-model="model"
     :items="periods"
-    variant="ghost"
-    class="data-[state=open]:bg-elevated"
-    :ui="{ value: 'capitalize', itemLabel: 'capitalize', trailingIcon: 'group-data-[state=open]:rotate-180 transition-transform duration-200' }"
+    variant="plain"
+    density="compact"
+    hide-details
+    class="text-capitalize"
+    style="max-width: 140px"
   />
 </template>

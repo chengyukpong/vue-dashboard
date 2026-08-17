@@ -1,16 +1,37 @@
-import { createSharedComposable } from '@vueuse/core'
+import { createSharedComposable, useMagicKeys } from '@vueuse/core'
 
 const _useDashboard = () => {
   const route = useRoute()
   const router = useRouter()
+  const { global: themeGlobal } = useTheme()
   const isNotificationsSlideoverOpen = ref(false)
+  const isCommandPaletteOpen = ref(false)
+  const isDark = ref(false)
 
-  defineShortcuts({
-    'g-h': () => router.push('/'),
-    'g-i': () => router.push('/inbox'),
-    'g-c': () => router.push('/customers'),
-    'g-s': () => router.push('/settings'),
-    'n': () => isNotificationsSlideoverOpen.value = !isNotificationsSlideoverOpen.value
+  function toggleTheme() {
+    isDark.value = !isDark.value
+    themeGlobal.name.value = isDark.value ? 'dark' : 'light'
+  }
+
+  const keys = useMagicKeys()
+
+  watch(() => keys['g_h']?.value, (v) => {
+    if (v) router.push('/')
+  })
+  watch(() => keys['g_i']?.value, (v) => {
+    if (v) router.push('/inbox')
+  })
+  watch(() => keys['g_c']?.value, (v) => {
+    if (v) router.push('/customers')
+  })
+  watch(() => keys['g_s']?.value, (v) => {
+    if (v) router.push('/settings')
+  })
+  watch(() => keys['n']?.value, (v) => {
+    if (v) isNotificationsSlideoverOpen.value = !isNotificationsSlideoverOpen.value
+  })
+  watch(() => keys['k_ctrl']?.value, (v) => {
+    if (v) isCommandPaletteOpen.value = !isCommandPaletteOpen.value
   })
 
   watch(() => route.fullPath, () => {
@@ -18,7 +39,10 @@ const _useDashboard = () => {
   })
 
   return {
-    isNotificationsSlideoverOpen
+    isNotificationsSlideoverOpen,
+    isCommandPaletteOpen,
+    isDark,
+    toggleTheme
   }
 }
 

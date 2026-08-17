@@ -1,19 +1,13 @@
 <script setup lang="ts">
 import { sub } from 'date-fns'
-import type { DropdownMenuItem } from '@nuxt/ui'
 import type { Period, Range } from '~/types'
 
 const { isNotificationsSlideoverOpen } = useDashboard()
 
-const items = [[{
-  label: 'New mail',
-  icon: 'i-lucide-send',
-  to: '/inbox'
-}, {
-  label: 'New customer',
-  icon: 'i-lucide-user-plus',
-  to: '/customers'
-}]] satisfies DropdownMenuItem[][]
+const items = [
+  { title: 'New mail', icon: 'mdi-send', to: '/inbox' },
+  { title: 'New customer', icon: 'mdi-account-plus', to: '/customers' }
+]
 
 const range = shallowRef<Range>({
   start: sub(new Date(), { days: 14 }),
@@ -23,47 +17,51 @@ const period = ref<Period>('daily')
 </script>
 
 <template>
-  <UDashboardPanel id="home">
-    <template #header>
-      <UDashboardNavbar title="Home" :ui="{ right: 'gap-3' }">
-        <template #leading>
-          <UDashboardSidebarCollapse />
-        </template>
+  <div>
+    <div class="d-flex align-center justify-space-between mb-4">
+      <div>
+        <h1 class="text-h5 font-weight-bold">
+          Home
+        </h1>
+      </div>
+      <div class="d-flex align-center ga-2">
+        <VBtn
+          icon
+          variant="text"
+          size="small"
+          @click="isNotificationsSlideoverOpen = true"
+        >
+          <VBadge dot color="error">
+            <VIcon>mdi-bell</VIcon>
+          </VBadge>
+        </VBtn>
+        <VMenu>
+          <template #activator="{ props: menuProps }">
+            <VBtn v-bind="menuProps" icon="mdi-plus" color="primary" variant="flat" rounded="circle" />
+          </template>
+          <VList density="compact" min-width="200">
+            <VListItem
+              v-for="item in items"
+              :key="item.title"
+              :prepend-icon="item.icon"
+              :title="item.title"
+              :to="item.to"
+              link
+            />
+          </VList>
+        </VMenu>
+      </div>
+    </div>
 
-        <template #right>
-          <UTooltip text="Notifications" :shortcuts="['N']">
-            <UButton
-              color="neutral"
-              variant="ghost"
-              square
-              @click="isNotificationsSlideoverOpen = true"
-            >
-              <UChip color="error" inset>
-                <UIcon name="i-lucide-bell" class="size-5 shrink-0" />
-              </UChip>
-            </UButton>
-          </UTooltip>
+    <div class="d-flex align-center ga-2 mb-4">
+      <HomeDateRangePicker v-model="range" />
+      <HomePeriodSelect v-model="period" :range="range" />
+    </div>
 
-          <UDropdownMenu :items="items">
-            <UButton icon="i-lucide-plus" size="md" class="rounded-full" />
-          </UDropdownMenu>
-        </template>
-      </UDashboardNavbar>
-
-      <UDashboardToolbar>
-        <template #left>
-          <!-- NOTE: The `-ms-1` class is used to align with the `DashboardSidebarCollapse` button here. -->
-          <HomeDateRangePicker v-model="range" class="-ms-1" />
-
-          <HomePeriodSelect v-model="period" :range="range" />
-        </template>
-      </UDashboardToolbar>
-    </template>
-
-    <template #body>
+    <div class="d-flex flex-column ga-4">
       <HomeStats :period="period" :range="range" />
       <HomeChart :period="period" :range="range" />
       <HomeSales :period="period" :range="range" />
-    </template>
-  </UDashboardPanel>
+    </div>
+  </div>
 </template>

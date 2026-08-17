@@ -59,64 +59,61 @@ const template = (d: DataRecord) => `${formatDate(d.date)}: ${formatNumber(d.amo
 </script>
 
 <template>
-  <UCard ref="cardRef" :ui="{ root: 'overflow-visible', body: 'px-0! pt-0! pb-3!' }">
-    <template #header>
-      <div>
-        <p class="text-xs text-muted uppercase mb-1.5">
-          Revenue
-        </p>
-        <p class="text-3xl text-highlighted font-semibold">
-          {{ formatNumber(total) }}
-        </p>
-      </div>
-    </template>
+  <VCard ref="cardRef" class="overflow-visible">
+    <VCardItem>
+      <VCardSubtitle class="text-uppercase text-caption mb-2">
+        Revenue
+      </VCardSubtitle>
+      <VCardTitle class="text-h4 font-weight-bold">
+        {{ formatNumber(total) }}
+      </VCardTitle>
+    </VCardItem>
+    <VCardText class="px-0 pb-3">
+      <VisXYContainer
+        :data="data"
+        :padding="{ top: 40 }"
+        :margin="{ left: -5, right: -5 }"
+        class="h-96"
+        :width="width"
+      >
+        <VisLine
+          :x="x"
+          :y="y"
+          color="rgb(var(--v-theme-primary))"
+        />
+        <VisArea
+          :x="x"
+          :y="y"
+          color="rgb(var(--v-theme-primary))"
+          :opacity="0.1"
+        />
 
-    <VisXYContainer
-      :data="data"
-      :padding="{ top: 40 }"
-      :margin="{ left: -5, right: -5 }"
-      class="h-96"
-      :width="width"
-    >
-      <VisLine
-        :x="x"
-        :y="y"
-        color="var(--ui-primary)"
-      />
-      <VisArea
-        :x="x"
-        :y="y"
-        color="var(--ui-primary)"
-        :opacity="0.1"
-      />
+        <VisAxis
+          type="x"
+          :x="x"
+          :tick-format="xTicks"
+        />
 
-      <VisAxis
-        type="x"
-        :x="x"
-        :tick-format="xTicks"
-      />
+        <VisCrosshair
+          color="rgb(var(--v-theme-primary))"
+          :template="template"
+        />
 
-      <VisCrosshair
-        color="var(--ui-primary)"
-        :template="template"
-      />
-
-      <VisTooltip />
-    </VisXYContainer>
-  </UCard>
+        <VisTooltip />
+      </VisXYContainer>
+    </VCardText>
+  </VCard>
 </template>
 
 <style scoped>
 .unovis-xy-container {
-  --vis-crosshair-line-stroke-color: var(--ui-primary);
-  --vis-crosshair-circle-stroke-color: var(--ui-bg);
-
-  --vis-axis-grid-color: var(--ui-border);
-  --vis-axis-tick-color: var(--ui-border);
-  --vis-axis-tick-label-color: var(--ui-text-dimmed);
-
-  --vis-tooltip-background-color: var(--ui-bg);
-  --vis-tooltip-border-color: var(--ui-border);
-  --vis-tooltip-text-color: var(--ui-text-highlighted);
+  --vis-crosshair-line-stroke-color: rgb(var(--v-theme-primary));
+  --vis-crosshair-circle-stroke-color: rgb(var(--v-theme-surface));
+  --vis-axis-grid-color: rgba(var(--v-theme-on-surface), 0.12);
+  --vis-axis-tick-color: rgba(var(--v-theme-on-surface), 0.12);
+  --vis-axis-tick-label-color: rgba(var(--v-theme-on-surface), 0.6);
+  --vis-tooltip-background-color: rgb(var(--v-theme-surface));
+  --vis-tooltip-border-color: rgba(var(--v-theme-on-surface), 0.12);
+  --vis-tooltip-text-color: rgb(var(--v-theme-on-surface));
 }
 </style>
